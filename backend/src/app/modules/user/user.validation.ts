@@ -1,42 +1,68 @@
-import { Gender } from '@prisma/client';
 import z from 'zod';
+import { ClientType, EmploymentType, Gender } from './user.interface';
 
-const createUserSchema = z.object({
-  name: z
-    .string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(50, 'Name must be at most 50 characters'),
+const email = z
+  .string()
+  .min(5, 'Email must be at least 5 characters')
+  .max(50, 'Email must be at most 50 characters')
+  .email('Invalid email address');
+const password = z.string().min(6, 'Password must be at least 6 characters');
 
-  username: z
-    .string()
-    .min(3, 'Username must be at least 3 characters')
-    .max(30, 'Username must be at most 30 characters')
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
-      'Username can only contain letters, numbers, and underscores',
-    ),
-
-  email: z.string().email('Invalid email address'),
-
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+export const addressSchema = z.object({
+  street: z.string().optional(),
+  city: z.string().nonempty('City is required'),
+  state: z.string().optional(),
+  country: z.string().nonempty('Country is required'),
+  postcode: z.string().optional(),
 });
 
-export const updateUserProfileSchema = z.object({
-  name: z
+export const contactInfoSchema = z.object({
+  email: email.optional(),
+  phone: z
     .string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(50, 'Name must be at most 50 characters')
+    .min(8, 'Phone number must be at least 8 characters')
+    .max(15, 'Phone number must be at most 15 characters')
     .optional(),
-
-  profilePhoto: z
-    .string()
-    .url('Profile picture must be a valid URL')
-    .nullable()
-    .optional(),
-
-  gender: z.nativeEnum(Gender).nullable().optional(),
 });
 
-const userValidations = { createUserSchema, updateUserProfileSchema };
+const createAdminSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').max(30),
+  profilePicture: z.string().url().optional(),
+  gender: z.nativeEnum(Gender).optional(),
+  email: email,
+  password: password,
+});
+
+export const createEmployeeSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').max(30),
+  gender: z.nativeEnum(Gender),
+  profilePicture: z.string().url(),
+  position: z.string().min(2, 'Position must be at least 2 characters').max(30),
+  employmentType: z.nativeEnum(EmploymentType),
+  address: addressSchema.optional(),
+  contactInfo: contactInfoSchema.optional(),
+
+  email: email,
+  password: password,
+});
+
+export const createClientSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').max(30),
+  gender: z.nativeEnum(Gender).optional(),
+  profilePicture: z.string().url().optional(),
+
+  clientType: z.nativeEnum(ClientType),
+  address: addressSchema.optional(),
+  contactInfo: contactInfoSchema.optional(),
+
+  email: email,
+  password: password,
+});
+
+const userValidations = {
+  createAdminSchema,
+  createEmployeeSchema,
+  createClientSchema,
+};
 
 export default userValidations;

@@ -7,7 +7,7 @@ import userService from './user.service';
 
 class UserController {
   getCurrentUser = catchAsync(async (req, res) => {
-    const result = await userService.getCurrentUserFromDB(req.user);
+    const result = await userService.getCurrentUser(req.user);
     sendSuccessResponse(res, {
       message: 'Current user retrieved successfully',
       statusCode: httpStatus.OK,
@@ -15,19 +15,10 @@ class UserController {
     });
   });
 
-  updateUserProfile = catchAsync(async (req, res) => {
-    const result = await userService.updateUserProfile(req.user, req.body);
-    sendSuccessResponse(res, {
-      message: 'User profile updated successfully',
-      statusCode: httpStatus.OK,
-      data: result,
-    });
-  });
-  getVisibleUsers = catchAsync(async (req, res) => {
-    const result = await userService.getVisibleUsersFromDB(
-      req.user,
-      pick(req.params, ['searchTerm']),
-      paginationOptionPicker(req.params),
+  getEmployees = catchAsync(async (req, res) => {
+    const result = await userService.getEmployees(
+      pick(req.params, ['searchTerm', 'notIn', 'select', 'status']),
+      paginationOptionPicker(req.query),
     );
     sendSuccessResponse(res, {
       message: 'Visible users retrieved successfully',
@@ -35,6 +26,19 @@ class UserController {
       ...result,
     });
   });
+
+  getClients = catchAsync(async (req, res) => {
+    const result = await userService.getClients(
+      pick(req.params, ['searchTerm', 'notIn', 'select', 'status']),
+      paginationOptionPicker(req.query),
+    );
+    sendSuccessResponse(res, {
+      message: 'Clients  retrieved successfully',
+      statusCode: httpStatus.OK,
+      ...result,
+    });
+  });
+  
 }
 
 export default new UserController();

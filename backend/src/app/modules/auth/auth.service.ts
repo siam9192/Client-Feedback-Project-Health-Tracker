@@ -15,8 +15,6 @@ import { AuthUser } from '../../types';
 import userRepository from '../user/user.repository';
 
 class AuthService {
- 
-
   async login(payload: UserLoginPayload) {
     const { identifier, password } = payload;
     const isEmailProvided = z

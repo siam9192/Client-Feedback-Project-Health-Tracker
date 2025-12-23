@@ -1,3 +1,5 @@
+import { UserRole } from '../user/user.interface';
+
 export interface UserRegistrationPayload {
   name: string;
   email: string;
@@ -13,4 +15,10 @@ export interface UserLoginPayload {
 export interface ChangePasswordPayload {
   oldPassword: string;
   newPassword: string;
+}
+
+export interface AuthUser {
+  userId: string;
+  role: UserRole;
+  profileId: string;
 }

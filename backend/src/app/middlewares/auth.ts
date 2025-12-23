@@ -4,12 +4,13 @@ import httpStatus from '../utils/http-status';
 import AppError from '../errors/AppError';
 import jwtHelper from '../helpers/jwt.helper';
 import envConfig from '../config/env.config';
-import { AuthUser } from '../types';
 import { JwtPayload } from 'jsonwebtoken';
-import { UserAccountStatus } from '@prisma/client';
-import userRepository from '../modules/user/user.repository';
+import { UserModel } from '../modules/user/user.model';
+import { AuthUser } from '../modules/auth/auth.interface';
+import { UserRole, UserStatus } from '../modules/user/user.interface';
 
-function auth() {
+
+function auth(...roles:UserRole[]) {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies?.accessToken?.replace('Bearer ', '');
 
@@ -31,17 +32,20 @@ function auth() {
     }
 
     // checking if the user is exist
-    const user = await userRepository.findById(decoded.id, {
-      select: { id: true, status: true },
-    });
-
+    const user = await UserModel.findById(decoded.userId)
+   
     if (!user) {
       throw new AppError(httpStatus.NOT_FOUND, 'This user is not found !');
     }
 
     // checking if the user is blocked
-    if (user.status === UserAccountStatus.Blocked) {
+    if (user.status === UserStatus.BLOCKED) {
       throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked ! !');
+    }
+    
+    // checking if the user role
+    if(roles.length && !roles.includes(user.role)) {
+      throw new AppError(httpStatus.UNAUTHORIZED, 'You have no access of this route');
     }
 
     req.user = decoded;
