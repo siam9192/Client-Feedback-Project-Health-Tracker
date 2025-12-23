@@ -84,14 +84,14 @@ export enum UserRole {
 }
 
 export enum Gender {
-  MALE = 'Male',
-  FEMALE = 'Female',
-  OTHER = 'Other',
+  MALE = 'male',
+  FEMALE = 'female',
+  OTHER = 'other',
 }
 
 export enum ClientType {
-  INDIVIDUAL = 'Individual',
-  COMPANY = 'Company',
+  INDIVIDUAL = 'individual',
+  COMPANY = 'company',
 }
 
 export type ContactInfo = {

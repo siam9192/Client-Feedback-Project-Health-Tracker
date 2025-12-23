@@ -12,9 +12,6 @@ export interface PaginationOptions {
   sortOrder?: string;
 }
 
-export interface AuthUser {
-  id: string;
-}
 
 export interface PaginationData {
   page: number;
