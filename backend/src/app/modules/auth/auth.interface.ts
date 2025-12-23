@@ -8,7 +8,7 @@ export interface UserRegistrationPayload {
 }
 
 export interface UserLoginPayload {
-  identifier: string;
+  email: string;
   password: string;
 }
 

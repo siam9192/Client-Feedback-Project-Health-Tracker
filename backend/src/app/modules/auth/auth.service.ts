@@ -1,25 +1,30 @@
-import z from 'zod';
 import envConfig from '../../config/env.config';
 import jwtHelper from '../../helpers/jwt.helper';
-import { ChangePasswordPayload, UserLoginPayload } from './auth.interface';
+import { UserLoginPayload } from './auth.interface';
 import AppError from '../../errors/AppError';
 import httpStatus from '../../utils/http-status';
 import bcryptHelper from '../../helpers/bycrypt.helper';
 import { AuthUser } from '../../types';
+import { UserModel } from '../user/user.model';
+import authValidations from './auth.validation';
+import { UserStatus } from '../user/user.interface';
 
 class AuthService {
   async login(payload: UserLoginPayload) {
-    const { identifier, password } = payload;
-    const isEmailProvided = z
-      .email(payload.identifier)
-      .safeParse(payload.identifier).success;
+    //  Validate payload  throw error when invalid
+    payload = authValidations.loginSchema.parse(payload);
 
-    const user = await prisma.user.findUnique({
-      where: {
-        ...(isEmailProvided ? { email: identifier } : { username: identifier }),
-      },
-      select: { id: true, password: true },
-    });
+    const { email, password } = payload;
+
+    const user = await UserModel.findOne({
+      email,
+    }).select('password profileId');
+
+    if (!user) throw new AppError(httpStatus.NOT_FOUND, 'Account not found');
+
+    if (user.status === UserStatus.BLOCKED) {
+      throw new AppError(httpStatus.FORBIDDEN, 'This account is blocked');
+    }
 
     // Compare password
     const isPasswordValid =
@@ -29,50 +34,7 @@ class AuthService {
       throw new AppError(httpStatus.FORBIDDEN, 'Invalid email or password');
     }
 
-    const tokenPayload = { id: user.id };
-
-    // Generate access token
-    const accessToken = jwtHelper.generateToken(
-      tokenPayload,
-      envConfig.jwt.access_token_secret as string,
-      envConfig.jwt.access_token_expire as string,
-    );
-    // Generate refresh token
-    const refreshToken = jwtHelper.generateToken(
-      tokenPayload,
-      envConfig.jwt.refresh_token_secret as string,
-      envConfig.jwt.refresh_token_expire as string,
-    );
-
-    return { accessToken, refreshToken };
-  }
-
-  async changePassword(authUser: AuthUser, payload: ChangePasswordPayload) {
-    const user = await prisma.user.findUnique({ where: { id: authUser.id } });
-
-    if (!user) throw new Error();
-    // Compare old password
-    const isPasswordMatch = await bcryptHelper.compare(
-      payload.oldPassword,
-      user.password,
-    );
-
-    if (!isPasswordMatch) {
-      throw new AppError(
-        httpStatus.NOT_ACCEPTABLE,
-        'Incorrect current password.',
-      );
-    }
-    // Hash the new password
-    const newEncryptedPassword = bcryptHelper.hash(payload.newPassword);
-
-    // Update user password and passwordLastChangedAt
-    await userRepository.updateById(authUser.id, {
-      password: newEncryptedPassword,
-      passwordLastChangedAt: new Date(),
-    });
-
-    const tokenPayload = { id: user.id };
+    const tokenPayload = { id: user._id.toString(), profileId: user.profileId };
 
     // Generate access token
     const accessToken = jwtHelper.generateToken(

@@ -5,7 +5,7 @@ import authRouter from '../modules/auth/auth.router';
 type TModuleRoutes = { path: string; router: IRouter }[];
 const router = Router();
 const moduleRoutes: TModuleRoutes = [
-  // { path: '/auth', router: authRouter },
+  { path: '/auth', router: authRouter },
   { path: '/users', router: userRouter },
 ];
 
