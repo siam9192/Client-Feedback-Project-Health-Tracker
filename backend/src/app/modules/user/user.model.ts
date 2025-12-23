@@ -54,8 +54,10 @@ const UserModelSchema = new Schema<User>(
     password: {
       type: String,
       required: true,
+      select: false,
     },
     role: {
+      type: String,
       enum: Object.values(UserRole),
       required: true,
     },
@@ -66,10 +68,7 @@ const UserModelSchema = new Schema<User>(
       default: UserStatus.ACTIVE,
     },
 
-    profileId: {
-      type: Schema.ObjectId,
-      required: true,
-    },
+    profileId: Schema.ObjectId,
   },
   {
     timestamps: true,
@@ -210,7 +209,7 @@ const AdminModelSchema = new Schema<Admin>(
   },
 );
 
-export const UserModel = model<User>('user', UserModelSchema);
-export const AdminModel = model<Admin>('admin', AdminModelSchema);
-export const EmployeeModel = model<Employee>('employee', EmployeeModelSchema);
-export const ClientModel = model<Client>('employee', ClientModelSchema);
+export const UserModel = model<User>('User', UserModelSchema);
+export const AdminModel = model<Admin>('Admin', AdminModelSchema);
+export const EmployeeModel = model<Employee>('Employee', EmployeeModelSchema);
+export const ClientModel = model<Client>('Client', ClientModelSchema);

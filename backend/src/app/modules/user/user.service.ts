@@ -5,6 +5,7 @@ import { calculatePagination } from '../../helpers/pagination.helper';
 import { AuthUser } from '../auth/auth.interface';
 import {
   CreateAdminPayload,
+  CreateClientPayload,
   CreateEmployeePayload,
   UserRole,
   UsersFilterQuery,
@@ -150,64 +151,87 @@ class UserService {
     const { searchTerm, notIn, select, ...others } = filterQuery;
     const { page, skip, limit, sortBy, sortOrder } =
       calculatePagination(paginationOptions);
-    const whereConditions: any = {};
 
-    if (searchTerm) {
-      whereConditions.$or = [
-        {
-          name: { $regex: searchTerm, $options: 'i' },
-          'user.email': { $regex: searchTerm, $options: 'i' },
+    // Build aggregation pipelines
+    const pipelines: any[] = [
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user',
         },
-      ];
+      },
+      { $unwind: '$user' },
+    ];
+
+    // Search term
+    if (searchTerm) {
+      pipelines.push({
+        $match: {
+          $or: [
+            { name: { $regex: searchTerm, $options: 'i' } },
+            { 'user.email': { $regex: searchTerm, $options: 'i' } },
+          ],
+        },
+      });
     }
 
+    // notIn IDs
     if (notIn) {
-      // Convert string to array
       const notInIds = notIn.split(',').map((id) => id.trim());
-
-      if (notInIds.length) {
-        // Check for invalid ObjectIds
-        const invalidId = notInIds.find((id) => !Types.ObjectId.isValid(id));
-        if (invalidId) {
-          throw new AppError(
-            httpStatus.FORBIDDEN,
-            `Invalid ID in notIn filter: ${invalidId}`,
-          );
-        }
-
-        // Set others filter key into whereConditions
-        if (Object.values(others).length) {
-          Object.entries(others).forEach(([key, value]) => {
-            if (!value) return;
-            whereConditions[key] = value;
-          });
-        }
-
-        // Use $nin to exclude these IDs
-        whereConditions._id = {
-          $nin: notInIds.map((id) => new Types.ObjectId(id)),
-        };
+      const invalidId = notInIds.find((id) => !Types.ObjectId.isValid(id));
+      if (invalidId) {
+        throw new AppError(
+          httpStatus.FORBIDDEN,
+          `Invalid ID in notIn filter: ${invalidId}`,
+        );
       }
+
+      pipelines.push({
+        $match: {
+          _id: { $nin: notInIds.map((id) => new Types.ObjectId(id)) },
+        },
+      });
     }
 
-    const findQuery = AdminModel.find(whereConditions)
-      .populate('user')
-      .sort({
-        [sortBy]: sortOrder,
-      })
-      .skip(skip)
-      .limit(limit);
-
-    if (select) {
-      findQuery.select(select);
+    // Other filters
+    const refined: Record<string, any> = {};
+    Object.entries(others).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) refined[key] = value;
+    });
+    if (Object.keys(refined).length) {
+      pipelines.push({ $match: refined });
     }
 
-    const admins = await findQuery.exec();
+    const selectFields = select
+      ? select.split(',').reduce((acc: any, field) => {
+          acc[field.trim()] = 1;
+          return acc;
+        }, {})
+      : {};
 
-    const totalResults = await AdminModel.countDocuments(whereConditions);
+    pipelines.push({
+      $facet: {
+        data: [
+          { $sort: { [sortBy]: sortOrder } },
+          { $skip: skip },
+          { $limit: limit },
+          ...(Object.keys(selectFields).length
+            ? [{ $project: selectFields }]
+            : []),
+        ],
+        totalCount: [{ $count: 'count' }],
+      },
+    });
+
+    const result = await ClientModel.aggregate(pipelines);
+
+    const clients = result[0]?.data || [];
+    const totalResults = result[0]?.totalCount[0]?.count || 0;
 
     return {
-      data: admins,
+      data: clients,
       meta: {
         page,
         limit,
@@ -223,137 +247,87 @@ class UserService {
     const { searchTerm, notIn, select, ...others } = filterQuery;
     const { page, skip, limit, sortBy, sortOrder } =
       calculatePagination(paginationOptions);
-    const whereConditions: any = {};
 
-    if (searchTerm) {
-      whereConditions.$or = [
-        {
-          name: { $regex: searchTerm, $options: 'i' },
-          'user.email': { $regex: searchTerm, $options: 'i' },
+    // Build aggregation pipelines
+    const pipelines: any[] = [
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'user',
         },
-      ];
+      },
+      { $unwind: '$user' },
+    ];
+
+    // Search term
+    if (searchTerm) {
+      pipelines.push({
+        $match: {
+          $or: [
+            { name: { $regex: searchTerm, $options: 'i' } },
+            { 'user.email': { $regex: searchTerm, $options: 'i' } },
+          ],
+        },
+      });
     }
 
+    // notIn IDs
     if (notIn) {
-      // Convert string to array
       const notInIds = notIn.split(',').map((id) => id.trim());
-
-      if (notInIds.length) {
-        // Check for invalid ObjectIds
-        const invalidId = notInIds.find((id) => !Types.ObjectId.isValid(id));
-        if (invalidId) {
-          throw new AppError(
-            httpStatus.FORBIDDEN,
-            `Invalid ID in notIn filter: ${invalidId}`,
-          );
-        }
-
-        // Set others filter key into whereConditions
-        if (Object.values(others).length) {
-          Object.entries(others).forEach(([key, value]) => {
-            if (!value) return;
-            whereConditions[key] = value;
-          });
-        }
-
-        // Use $nin to exclude these IDs
-        whereConditions._id = {
-          $nin: notInIds.map((id) => new Types.ObjectId(id)),
-        };
+      const invalidId = notInIds.find((id) => !Types.ObjectId.isValid(id));
+      if (invalidId) {
+        throw new AppError(
+          httpStatus.FORBIDDEN,
+          `Invalid ID in notIn filter: ${invalidId}`,
+        );
       }
+
+      pipelines.push({
+        $match: {
+          _id: { $nin: notInIds.map((id) => new Types.ObjectId(id)) },
+        },
+      });
     }
 
-    const findQuery = EmployeeModel.find(whereConditions)
-      .populate('user')
-      .sort({
-        [sortBy]: sortOrder,
-      })
-      .skip(skip)
-      .limit(limit);
-
-    if (select) {
-      findQuery.select(select);
+    // Other filters
+    const refined: Record<string, any> = {};
+    Object.entries(others).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) refined[key] = value;
+    });
+    if (Object.keys(refined).length) {
+      pipelines.push({ $match: refined });
     }
 
-    const employees = await findQuery.exec();
+    const selectFields = select
+      ? select.split(',').reduce((acc: any, field) => {
+          acc[field.trim()] = 1;
+          return acc;
+        }, {})
+      : {};
 
-    const totalResults = await EmployeeModel.countDocuments(whereConditions);
+    pipelines.push({
+      $facet: {
+        data: [
+          { $sort: { [sortBy]: sortOrder } },
+          { $skip: skip },
+          { $limit: limit },
+          ...(Object.keys(selectFields).length
+            ? [{ $project: selectFields }]
+            : []),
+        ],
+        totalCount: [{ $count: 'count' }],
+      },
+    });
+
+    const result = await EmployeeModel.aggregate(pipelines);
+
+    const employees = result[0]?.data || [];
+    const totalResults = result[0]?.totalCount[0]?.count || 0;
 
     return {
       data: employees,
-      meta: {
-        page,
-        limit,
-        totalResults,
-      },
-    };
-  }
-
-  async getAdmins(
-    filterQuery: UsersFilterQuery,
-    paginationOptions: PaginationOptions,
-  ) {
-    const { searchTerm, notIn, select, ...others } = filterQuery;
-    const { page, skip, limit, sortBy, sortOrder } =
-      calculatePagination(paginationOptions);
-    const whereConditions: any = {};
-
-    if (searchTerm) {
-      whereConditions.$or = [
-        {
-          name: { $regex: searchTerm, $options: 'i' },
-          'user.email': { $regex: searchTerm, $options: 'i' },
-        },
-      ];
-    }
-
-    if (notIn) {
-      // Convert string to array
-      const notInIds = notIn.split(',').map((id) => id.trim());
-
-      if (notInIds.length) {
-        // Check for invalid ObjectIds
-        const invalidId = notInIds.find((id) => !Types.ObjectId.isValid(id));
-        if (invalidId) {
-          throw new AppError(
-            httpStatus.FORBIDDEN,
-            `Invalid ID in notIn filter: ${invalidId}`,
-          );
-        }
-
-        // Set others filter key into whereConditions
-        if (Object.values(others).length) {
-          Object.entries(others).forEach(([key, value]) => {
-            if (!value) return;
-            whereConditions[key] = value;
-          });
-        }
-
-        // Use $nin to exclude these IDs
-        whereConditions._id = {
-          $nin: notInIds.map((id) => new Types.ObjectId(id)),
-        };
-      }
-    }
-
-    const findQuery = AdminModel.find(whereConditions)
-      .populate('user')
-      .sort({
-        [sortBy]: sortOrder,
-      })
-      .skip(skip)
-      .limit(limit);
-
-    if (select) {
-      findQuery.select(select);
-    }
-
-    const admins = await findQuery.exec();
-
-    const totalResults = await AdminModel.countDocuments(whereConditions);
-
-    return {
-      data: admins,
       meta: {
         page,
         limit,
@@ -369,6 +343,7 @@ class UserService {
     const { email, ...profileData } = payload;
     //  Check if email already exists
     const existingUser = await UserModel.findOne({ email });
+    console.log(11, existingUser);
     if (existingUser) {
       throw new AppError(httpStatus.FORBIDDEN, 'This email is already in use');
     }
@@ -408,6 +383,19 @@ class UserService {
 
       if (!admin[0]) throw new Error();
 
+      // Set profile id in user
+      const userUpdateStatus = await UserModel.updateOne(
+        {
+          _id: user[0]._id,
+        },
+        {
+          profileId: admin[0]._id,
+        },
+        { session },
+      );
+
+      if (!userUpdateStatus.modifiedCount) throw new Error();
+
       // Commit transaction
       await session.commitTransaction();
       session.endSession();
@@ -429,6 +417,7 @@ class UserService {
     const { email, ...profileData } = payload;
     //  Check if email already exists
     const existingUser = await UserModel.findOne({ email });
+    console.log(existingUser);
     if (existingUser) {
       throw new AppError(httpStatus.FORBIDDEN, 'This email is already in use');
     }
@@ -468,6 +457,19 @@ class UserService {
 
       if (!employee[0]) throw new Error();
 
+      // Set profile id in user
+      const userUpdateStatus = await UserModel.updateOne(
+        {
+          _id: user[0]._id,
+        },
+        {
+          profileId: employee[0]._id,
+        },
+        { session },
+      );
+
+      if (!userUpdateStatus.modifiedCount) throw new Error();
+
       // Commit transaction
       await session.commitTransaction();
       session.endSession();
@@ -482,7 +484,7 @@ class UserService {
     }
   }
 
-  async createClient(payload: CreateEmployeePayload) {
+  async createClient(payload: CreateClientPayload) {
     // Validate payload using zod schema
     userValidations.createClientSchema.parse(payload);
 
@@ -527,6 +529,19 @@ class UserService {
       );
 
       if (!client[0]) throw new Error();
+
+      // Set profile id in user
+      const userUpdateStatus = await UserModel.updateOne(
+        {
+          _id: user[0]._id,
+        },
+        {
+          profileId: client[0]._id,
+        },
+        { session },
+      );
+
+      if (!userUpdateStatus.modifiedCount) throw new Error();
 
       // Commit transaction
       await session.commitTransaction();

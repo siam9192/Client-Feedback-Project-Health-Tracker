@@ -9,8 +9,7 @@ import { UserModel } from '../modules/user/user.model';
 import { AuthUser } from '../modules/auth/auth.interface';
 import { UserRole, UserStatus } from '../modules/user/user.interface';
 
-
-function auth(...roles:UserRole[]) {
+function auth(...roles: UserRole[]) {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies?.accessToken?.replace('Bearer ', '');
 
@@ -32,8 +31,8 @@ function auth(...roles:UserRole[]) {
     }
 
     // checking if the user is exist
-    const user = await UserModel.findById(decoded.userId)
-   
+    const user = await UserModel.findById(decoded.userId);
+
     if (!user) {
       throw new AppError(httpStatus.NOT_FOUND, 'This user is not found !');
     }
@@ -42,10 +41,13 @@ function auth(...roles:UserRole[]) {
     if (user.status === UserStatus.BLOCKED) {
       throw new AppError(httpStatus.FORBIDDEN, 'This user is blocked ! !');
     }
-    
+
     // checking if the user role
-    if(roles.length && !roles.includes(user.role)) {
-      throw new AppError(httpStatus.UNAUTHORIZED, 'You have no access of this route');
+    if (roles.length && !roles.includes(user.role)) {
+      throw new AppError(
+        httpStatus.UNAUTHORIZED,
+        'You have no access of this route',
+      );
     }
 
     req.user = decoded;

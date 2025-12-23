@@ -15,9 +15,18 @@ class UserController {
     });
   });
 
+  getUserById = catchAsync(async (req, res) => {
+    const result = await userService.getUserById(req.params.id);
+    sendSuccessResponse(res, {
+      message: 'User retrieved successfully',
+      statusCode: httpStatus.OK,
+      data: result,
+    });
+  });
+
   getEmployees = catchAsync(async (req, res) => {
     const result = await userService.getEmployees(
-      pick(req.params, ['searchTerm', 'notIn', 'select', 'status']),
+      pick(req.query, ['searchTerm', 'notIn', 'select', 'status']),
       paginationOptionPicker(req.query),
     );
     sendSuccessResponse(res, {
@@ -29,7 +38,7 @@ class UserController {
 
   getClients = catchAsync(async (req, res) => {
     const result = await userService.getClients(
-      pick(req.params, ['searchTerm', 'notIn', 'select', 'status']),
+      pick(req.query, ['searchTerm', 'notIn', 'select', 'status']),
       paginationOptionPicker(req.query),
     );
     sendSuccessResponse(res, {
@@ -38,7 +47,6 @@ class UserController {
       ...result,
     });
   });
-  
 }
 
 export default new UserController();

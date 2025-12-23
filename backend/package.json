@@ -25,6 +25,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only ./src/app/server.ts",
+    "seed": "ts-node-dev --respawn --transpile-only ./src/app/scripts/seed-user.script.ts",
     "prettier": "prettier --ignore-path .gitignore --write \"./src/app/**/*.+(ts|json)\""
   },
   "name": "backend",

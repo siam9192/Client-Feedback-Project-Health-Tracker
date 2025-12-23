@@ -1,18 +1,11 @@
 import z from 'zod';
 import envConfig from '../../config/env.config';
 import jwtHelper from '../../helpers/jwt.helper';
-import { prisma } from '../../prisma';
-import userService from '../user/user.service';
-import {
-  ChangePasswordPayload,
-  UserLoginPayload,
-  UserRegistrationPayload,
-} from './auth.interface';
+import { ChangePasswordPayload, UserLoginPayload } from './auth.interface';
 import AppError from '../../errors/AppError';
 import httpStatus from '../../utils/http-status';
 import bcryptHelper from '../../helpers/bycrypt.helper';
 import { AuthUser } from '../../types';
-import userRepository from '../user/user.repository';
 
 class AuthService {
   async login(payload: UserLoginPayload) {

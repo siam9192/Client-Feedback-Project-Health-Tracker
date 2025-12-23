@@ -21,7 +21,7 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 // API routes
-app.use('/api', routes);
+app.use('/api/v1', routes);
 
 // Route not found Handler
 app.use((req: Request, res: Response) => {

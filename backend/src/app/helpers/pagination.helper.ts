@@ -11,7 +11,7 @@ interface IOptionsResult {
   page: number;
   limit: number;
   skip: number;
-  sortOrder: ESortOrder;
+  sortOrder: 1 | -1;
   sortBy: string;
 }
 
@@ -48,7 +48,13 @@ export const calculatePagination = (
 
   const skip = (page - 1) * limit;
 
-  return { page, limit, skip, sortOrder, sortBy };
+  return {
+    page,
+    limit,
+    skip,
+    sortOrder: sortOrder === ESortOrder.ASC ? 1 : -1,
+    sortBy,
+  };
 };
 
 // Strongly typed pick for pagination
