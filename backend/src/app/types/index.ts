@@ -12,7 +12,6 @@ export interface PaginationOptions {
   sortOrder?: string;
 }
 
-
 export interface PaginationData {
   page: number;
   limit: number;

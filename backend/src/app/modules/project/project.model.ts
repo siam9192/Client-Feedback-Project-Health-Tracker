@@ -20,20 +20,11 @@ const ProjectModelSchema = new Schema<Project>(
     },
     healthScore: { type: Number, min: 0, max: 100, default: 100 },
 
-    clientId: { type: Schema.Types.ObjectId, ref: 'Client', required: true },
-    client: { type: Schema.Types.ObjectId, ref: 'Client', select: false },
+    client: { type: Schema.Types.ObjectId, ref: 'Client' },
 
     employees: {
-      type: [
-        {
-          id: { type: Schema.Types.ObjectId, ref: 'Employee', required: true },
-          employee: {
-            type: Schema.Types.ObjectId,
-            ref: 'Employee',
-            required: true,
-          },
-        },
-      ],
+      type: [{ type: Schema.Types.ObjectId, ref: 'Employee' }],
+      ref: 'Employee',
       required: true,
       validate: [
         (val: any[]) => val.length > 0,

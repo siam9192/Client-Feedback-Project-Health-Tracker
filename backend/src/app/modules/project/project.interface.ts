@@ -14,12 +14,8 @@ export interface Project extends Document {
   createdAt: Date;
   updatedAt: Date;
 
-  clientId: Types.ObjectId;
-  client?: Types.ObjectId | Client;
-  employees: {
-    id: Types.ObjectId;
-    employee: Types.ObjectId | Employee;
-  }[];
+  client: Types.ObjectId | Client;
+  employees: Types.ObjectId[];
 }
 
 export enum ProjectStatus {
