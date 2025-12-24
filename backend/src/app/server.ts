@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import app from './app';
 import envConfig from './config/env.config';
 import projectService from './modules/project/project.service';
+import { getCurrentWeek } from './helpers/utils.helper';
 
 async function main() {
   try {

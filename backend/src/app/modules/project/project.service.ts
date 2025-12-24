@@ -133,7 +133,6 @@ class ProjectService {
     };
   }
   async getAllGroupProjectsByHealthStatus() {
-
     //  Aggregate projects grouped by status
     const groups = await ProjectModel.aggregate([
       {
@@ -172,7 +171,7 @@ class ProjectService {
       .lean()
       .exec();
 
-    //  Convert arrays 
+    //  Convert arrays
     const clientMap = new Map(clients.map((c) => [c._id.toString(), c]));
     const employeeMap = new Map(employees.map((e) => [e._id.toString(), e]));
 
@@ -195,8 +194,6 @@ class ProjectService {
     return result;
   }
 
-  async getHighRiskProjects() {
-
-  }
+  async getHighRiskProjects() {}
 }
 export default new ProjectService();

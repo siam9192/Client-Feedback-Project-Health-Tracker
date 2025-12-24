@@ -22,7 +22,7 @@ export enum ProjectStatus {
   ON_TRACK = 'on_track',
   AT_RISK = 'at_risk',
   CRITICAL = 'critical',
-  Completed = 'completed',
+  COMPLETED = 'completed',
 }
 
 export type CreateProjectPayload = z.infer<
