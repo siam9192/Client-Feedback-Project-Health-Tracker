@@ -23,7 +23,7 @@ import userValidations from './user.validation';
 class UserService {
   async getCurrentUser(authUser: AuthUser) {
     const { userId, profileId, role } = authUser;
-    const user = await UserModel.findById(userId);
+    const user = await UserModel.findById(userId).lean();
     // Check user existence
     if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
     let profile;
@@ -47,6 +47,7 @@ class UserService {
         const employee = await EmployeeModel.findById(profileId)
           .populate('user')
           .lean();
+
         if (!employee || !employee.user)
           throw new Error('Employee profile not found');
 
@@ -83,7 +84,7 @@ class UserService {
   }
 
   async getUserById(id: string) {
-    const user = await UserModel.findById(id);
+    const user = await UserModel.findById(id).lean();
     // Check user existence
     if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
     const { profileId, role } = user;
@@ -160,6 +161,13 @@ class UserService {
           localField: 'user',
           foreignField: '_id',
           as: 'user',
+          pipeline: [
+            {
+              $project: {
+                password: 0,
+              },
+            },
+          ],
         },
       },
       { $unwind: '$user' },
@@ -256,6 +264,13 @@ class UserService {
           localField: 'user',
           foreignField: '_id',
           as: 'user',
+          pipeline: [
+            {
+              $project: {
+                password: 0,
+              },
+            },
+          ],
         },
       },
       { $unwind: '$user' },
@@ -343,7 +358,7 @@ class UserService {
     const { email, ...profileData } = payload;
     //  Check if email already exists
     const existingUser = await UserModel.findOne({ email });
-    console.log(11, existingUser);
+
     if (existingUser) {
       throw new AppError(httpStatus.FORBIDDEN, 'This email is already in use');
     }
@@ -371,7 +386,6 @@ class UserService {
       const admin = await AdminModel.create(
         [
           {
-            userId: user[0]._id,
             user: user[0]._id,
             ...profileData,
           },
@@ -417,7 +431,7 @@ class UserService {
     const { email, ...profileData } = payload;
     //  Check if email already exists
     const existingUser = await UserModel.findOne({ email });
-    console.log(existingUser);
+
     if (existingUser) {
       throw new AppError(httpStatus.FORBIDDEN, 'This email is already in use');
     }
@@ -445,7 +459,6 @@ class UserService {
       const employee = await EmployeeModel.create(
         [
           {
-            userId: user[0]._id,
             user: user[0]._id,
             ...profileData,
           },
@@ -518,7 +531,6 @@ class UserService {
       const client = await ClientModel.create(
         [
           {
-            userId: user[0]._id,
             user: user[0]._id,
             ...profileData,
           },

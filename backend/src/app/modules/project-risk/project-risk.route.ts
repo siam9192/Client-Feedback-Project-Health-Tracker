@@ -4,9 +4,9 @@ import { UserRole } from '../user/user.interface';
 import projectRiskController from './project-risk.controller';
 
 const router = Router();
-router.post('/', auth(UserRole.CLIENT), projectRiskController.createRisk);
+router.post('/', auth(UserRole.EMPLOYEE), projectRiskController.createRisk);
 
-router.get('/', auth(UserRole.EMPLOYEE), projectRiskController.getRisks);
+router.get('/', auth(UserRole.ADMIN), projectRiskController.getRisks);
 
 const projectRiskRouter = router;
 

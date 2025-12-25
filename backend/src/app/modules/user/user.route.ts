@@ -9,7 +9,7 @@ router.get('/me', auth(), userController.getCurrentUser);
 
 router.get('/employees', userController.getEmployees);
 
-router.get('/clients', userController.getEmployees);
+router.get('/clients', userController.getClients);
 
 router.get('/:id', auth(UserRole.ADMIN), userController.getUserById);
 

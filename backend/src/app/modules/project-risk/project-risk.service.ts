@@ -9,6 +9,7 @@ import {
 } from '../activity/activity.interface';
 import activityService from '../activity/activity.service';
 import { AuthUser } from '../auth/auth.interface';
+import { ProjectModel } from '../project/project.model';
 import {
   CreateProjectRiskPayload,
   ProjectRisksFilterQuery,
@@ -22,16 +23,17 @@ class ProjectRiskService {
     payload = projectRiskValidations.createRiskSchema.parse(payload);
 
     //Fetch project
-    const project = await ProjectRiskModel.findById(payload.projectId);
+    const project = await ProjectModel.findById(payload.projectId);
 
     // Check project existence
     if (!project) throw new AppError(httpStatus.NOT_FOUND, 'Project not found');
 
-    if (project.employee.toString() !== authUser.profileId)
-      throw new AppError(
-        httpStatus.FORBIDDEN,
-        'You have no access to create risk for this project ',
-      );
+    // Authorize
+     if (!project.employees.includes(objectId(authUser.profileId)))
+          throw new AppError(
+            httpStatus.FORBIDDEN,
+            "You can't submit chickin in this project ",
+        );
 
     const { projectId, ...others } = payload;
 
@@ -57,6 +59,7 @@ class ProjectRiskService {
       performedBy: authUser.profileId,
       performerRole: ActivityPerformerRole.CLIENT,
     });
+    return createdRisk
   }
 
   async getRisks(

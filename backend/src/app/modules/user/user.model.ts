@@ -150,7 +150,10 @@ const ClientModelSchema = new Schema<Client>(
       enum: Object.values(ClientType),
       required: true,
     },
-    address: { type: AddressSchema, required: true },
+    address: {
+      type: AddressSchema,
+      required: true,
+    },
     contactInfo: ContactInfoSchema,
     count: {
       runningProjects: { type: Number, min: 0, default: 0 },
@@ -180,7 +183,6 @@ const AdminModelSchema = new Schema<Admin>(
     gender: {
       type: String,
       enum: Object.values(Gender),
-      default: null,
     },
     profilePicture: {
       type: String,

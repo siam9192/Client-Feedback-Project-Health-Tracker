@@ -18,7 +18,7 @@ router.get(
 );
 
 router.get(
-  '/group-by-status',
+  '/health-group',
   auth(UserRole.ADMIN),
   projectController.getAllGroupProjectsByHealthStatus,
 );

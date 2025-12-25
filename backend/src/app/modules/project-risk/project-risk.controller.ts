@@ -23,7 +23,7 @@ class ProjectRiskController {
     sendSuccessResponse(res, {
       message: 'Project risks retrieved successfully',
       statusCode: httpStatus.OK,
-      data: result,
+      ...result,
     });
   });
 }

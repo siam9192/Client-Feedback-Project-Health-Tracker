@@ -11,12 +11,7 @@ import {
 import projectValidations from './project.validation';
 
 import { ProjectModel } from './project.model';
-import {
-  getCurrentWeek,
-  getISOweek,
-  getRecentWeeks,
-  objectId,
-} from '../../helpers/utils.helper';
+import { getRecentWeeks, objectId } from '../../helpers/utils.helper';
 import { PaginationOptions } from '../../types';
 import { calculatePagination } from '../../helpers/pagination.helper';
 import { AuthUser } from '../auth/auth.interface';
@@ -28,7 +23,6 @@ import {
   ProjectRiskSeverity,
   ProjectRiskStatus,
 } from '../project-risk/project-risk.interface';
-import { IssueStatus } from '../client-feedback/client-feedback.interface';
 import activityService from '../activity/activity.service';
 import {
   ActivityPerformerRole,
@@ -287,6 +281,13 @@ class ProjectService {
   async getAllGroupProjectsByHealthStatus() {
     //  Aggregate projects grouped by status
     const groups = await ProjectModel.aggregate([
+      {
+        $match: {
+          status: {
+            $ne: ProjectStatus.COMPLETED,
+          },
+        },
+      },
       {
         $group: {
           _id: '$status',

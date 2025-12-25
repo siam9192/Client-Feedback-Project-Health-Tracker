@@ -30,7 +30,7 @@ class UserController {
       paginationOptionPicker(req.query),
     );
     sendSuccessResponse(res, {
-      message: 'Visible users retrieved successfully',
+      message: 'Employees retrieved successfully',
       statusCode: httpStatus.OK,
       ...result,
     });

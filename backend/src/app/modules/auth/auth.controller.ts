@@ -27,7 +27,7 @@ class AuthController {
     sendSuccessResponse(res, {
       message: 'Login successful',
       statusCode: httpStatus.OK,
-      data: null,
+      data: result,
     });
   });
 

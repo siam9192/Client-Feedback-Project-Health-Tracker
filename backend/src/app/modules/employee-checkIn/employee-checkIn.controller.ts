@@ -25,7 +25,7 @@ class CheckInController {
     sendSuccessResponse(res, {
       message: 'Pending checkins retrieved successfully',
       statusCode: httpStatus.OK,
-      data: result,
+      ...result,
     });
   });
 

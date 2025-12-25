@@ -1,13 +1,13 @@
 import envConfig from '../../config/env.config';
 import jwtHelper from '../../helpers/jwt.helper';
-import { UserLoginPayload } from './auth.interface';
+import { AuthUser, UserLoginPayload } from './auth.interface';
 import AppError from '../../errors/AppError';
 import httpStatus from '../../utils/http-status';
 import bcryptHelper from '../../helpers/bycrypt.helper';
-import { AuthUser } from '../../types';
 import { UserModel } from '../user/user.model';
 import authValidations from './auth.validation';
 import { UserStatus } from '../user/user.interface';
+import { JwtPayload } from 'jsonwebtoken';
 
 class AuthService {
   async login(payload: UserLoginPayload) {
@@ -34,7 +34,7 @@ class AuthService {
       throw new AppError(httpStatus.FORBIDDEN, 'Invalid email or password');
     }
 
-    const tokenPayload = { id: user._id.toString(), profileId: user.profileId };
+    const tokenPayload = { sub: user._id.toString() };
 
     // Generate access token
     const accessToken = jwtHelper.generateToken(
@@ -67,9 +67,9 @@ class AuthService {
         decoded = jwtHelper.verifyToken(
           oldRefreshToken,
           envConfig.jwt.refresh_token_secret as string,
-        ) as AuthUser;
+        ) as JwtPayload;
 
-        if (!decoded || !decoded.id) {
+        if (!decoded || !decoded.sub) {
           throw new Error();
         }
       } catch (error) {

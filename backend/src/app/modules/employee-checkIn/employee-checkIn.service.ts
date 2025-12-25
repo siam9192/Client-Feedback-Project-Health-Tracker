@@ -48,12 +48,15 @@ class EmployeeCheckInService {
     if (thisWeekCheckIn)
       throw new AppError(
         httpStatus.FORBIDDEN,
-        'Checked in  submitted already for this week',
+        'You have already completed your weekly check-in',
       );
 
     const createdCheckIn = await EmployeeCheckInModel.create({
       ...payload,
+      week,
+      year,
       employee: objectId(authUser.profileId),
+      project:project._id
     });
 
     // Create activity

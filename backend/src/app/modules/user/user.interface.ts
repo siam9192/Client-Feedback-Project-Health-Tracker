@@ -111,6 +111,7 @@ export enum EmploymentType {
   FULLTIME = 'fulltime',
   PARTTIME = 'parttime',
   INTERN = 'intern',
+  CONTRACT = 'contract',
 }
 
 // Service payloads

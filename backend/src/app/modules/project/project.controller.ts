@@ -31,7 +31,7 @@ class ProjectController {
   getAllGroupProjectsByHealthStatus = catchAsync(async (req, res) => {
     const result = await projectService.getAllGroupProjectsByHealthStatus();
     sendSuccessResponse(res, {
-      message: 'Assigned projects retrieved successfully',
+      message: 'Projects health group retrieved successfully',
       statusCode: httpStatus.OK,
       data: result,
     });
@@ -43,7 +43,7 @@ class ProjectController {
       req.params.projectId,
     );
     sendSuccessResponse(res, {
-      message: 'Assigned projects retrieved successfully',
+      message: 'Project retrieved successfully',
       statusCode: httpStatus.OK,
       data: result,
     });
