@@ -12,7 +12,7 @@ const createCheckInSchema = z.object({
 
   completePercentage: z.number().min(0).max(100),
 
-  project: z.string().refine((val) => Types.ObjectId.isValid(val), {
+  projectId: z.string().refine((val) => Types.ObjectId.isValid(val), {
     message: 'Invalid project ID',
   }),
 });

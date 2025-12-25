@@ -6,15 +6,34 @@ import {
   CreateProjectPayload,
   Project,
   ProjectsFilterQuery,
+  ProjectStatus,
 } from './project.interface';
 import projectValidations from './project.validation';
 
 import { ProjectModel } from './project.model';
-import { objectId } from '../../helpers/utils.helper';
+import {
+  getCurrentWeek,
+  getISOweek,
+  getRecentWeeks,
+  objectId,
+} from '../../helpers/utils.helper';
 import { PaginationOptions } from '../../types';
 import { calculatePagination } from '../../helpers/pagination.helper';
 import { AuthUser } from '../auth/auth.interface';
 import { Types } from 'mongoose';
+import { ClientFeedbackModel } from '../client-feedback/client-feedback.model';
+import { EmployeeCheckInModel } from '../employee-checkIn/employee-checkIn.model';
+import { ProjectRiskModel } from '../project-risk/project-risk.model';
+import {
+  ProjectRiskSeverity,
+  ProjectRiskStatus,
+} from '../project-risk/project-risk.interface';
+import { IssueStatus } from '../client-feedback/client-feedback.interface';
+import activityService from '../activity/activity.service';
+import {
+  ActivityPerformerRole,
+  ActivityType,
+} from '../activity/activity.interface';
 
 class ProjectService {
   async createProject(payload: CreateProjectPayload) {
@@ -75,6 +94,138 @@ class ProjectService {
       ...othersData,
       employees: employeeIds.map((id) => objectId(id)),
     });
+  }
+
+  async updateProjectHealthScore(projectId: string) {
+    // last 2 weeks
+    const recentWeeks = getRecentWeeks(2);
+
+    const project = await ProjectModel.findById(projectId);
+    if (!project) return;
+
+    const startDate = new Date(project.startDate);
+    const endDate = new Date(project.endDate);
+
+    //  CLIENT SATISFACTION
+    const recentFeedbacks = await ClientFeedbackModel.find({
+      $or: recentWeeks.map((w) => ({ week: w.week, year: w.year })),
+      project: objectId(projectId),
+    }).sort({ createdAt: -1 });
+
+    let clientPoints = 100;
+
+    if (recentFeedbacks.length === 0) {
+      // Penalty: No feedback from client in 2 weeks suggests poor communication
+      clientPoints = 50;
+    } else {
+      // Average all ratings from the last 2 weeks
+      const sum = recentFeedbacks.reduce(
+        (acc, curr) => acc + curr.satisfactionRating,
+        0,
+      );
+      const averageRating = sum / recentFeedbacks.length;
+      clientPoints = (averageRating / 5) * 100;
+    }
+
+    //  EMPLOYEE CONFIDENCE (30%)
+    const recentCheckins = await EmployeeCheckInModel.find({
+      $or: recentWeeks.map((w) => ({ week: w.week, year: w.year })),
+      project: objectId(projectId),
+    });
+
+    let employeePoints = 100;
+    if (recentCheckins.length > 0) {
+      // Calculate average team confidence
+      const avgConfidence =
+        recentCheckins.reduce((acc, curr) => acc + curr.confidenceLevel, 0) /
+        recentCheckins.length;
+      employeePoints = (avgConfidence / 5) * 100;
+    } else {
+      // Penalty: Team is not checking in
+      employeePoints = 50;
+    }
+
+    //PROJECT PROGRESS
+    const totalDuration = endDate.getTime() - startDate.getTime();
+    const elapsed = Date.now() - startDate.getTime();
+
+    // Calculate what % of time has passed (Stay at 0 if project hasn't started)
+    let expectedProgress = Math.min(100, (elapsed / totalDuration) * 100);
+    if (elapsed < 0) expectedProgress = 0;
+
+    const actualProgress = project.progressPercentage || 0;
+
+    let progressPoints = 100;
+    if (actualProgress < expectedProgress) {
+      // Penalize: Subtract 2 points for every 1% the project is behind schedule
+      progressPoints = Math.max(
+        0,
+        100 - (expectedProgress - actualProgress) * 2,
+      );
+    }
+
+    // RISKS & ISSUES
+    const activeRisks = await ProjectRiskModel.find({
+      project: objectId(projectId),
+      status: ProjectRiskStatus.OPEN,
+    });
+
+    // Check for specific issues flagged by clients in their feedback
+    const activeIssues = await ClientFeedbackModel.find({
+      project: objectId(projectId),
+      issueFlagged: true,
+    });
+
+    let riskPoints = 100;
+    activeRisks.forEach((risk) => {
+      // Deduct points based on how dangerous the risk is
+      if (risk.severity === ProjectRiskSeverity.HIGH) riskPoints -= 15;
+      if (risk.severity === ProjectRiskSeverity.MEDIUM) riskPoints -= 10;
+      if (risk.severity === ProjectRiskSeverity.LOW) riskPoints -= 5;
+    });
+
+    // Deduct 10 points per client-flagged issue
+    const issuePenalty = activeIssues.length * 10;
+    riskPoints -= issuePenalty;
+
+    riskPoints = Math.max(0, riskPoints);
+
+    //FINAL CALCULATION (Weighted)
+    const finalScore = Math.round(
+      clientPoints * 0.25 +
+        employeePoints * 0.3 +
+        progressPoints * 0.2 +
+        riskPoints * 0.25,
+    );
+    //  Determine the status based on the new score
+    const newStatus =
+      finalScore < 60
+        ? ProjectStatus.CRITICAL
+        : finalScore < 80
+          ? ProjectStatus.AT_RISK
+          : ProjectStatus.ON_TRACK;
+
+    //  Check for changes before saving
+    const oldStatus = project.status;
+    const isStatusChanged = oldStatus !== newStatus;
+
+    //  Update the document
+    project.healthScore = finalScore;
+    if (isStatusChanged) {
+      project.status = newStatus;
+      await activityService.createDirectActivity(
+        {
+          projectId: project._id.toString(),
+          referenceId: project._id.toString(),
+          type: ActivityType.STATUS_CHANGE,
+          content: `Project status automatically shifted from ${oldStatus} to ${newStatus} (Health Score: ${finalScore})`,
+          performerRole: ActivityPerformerRole.SYSTEM,
+        },
+        false,
+      );
+    }
+    await project.save();
+    return finalScore;
   }
 
   async getAssignedProjects(
@@ -231,7 +382,7 @@ class ProjectService {
       }
     }
 
-    // Return project as result 
+    // Return project as result
     return project;
   }
 

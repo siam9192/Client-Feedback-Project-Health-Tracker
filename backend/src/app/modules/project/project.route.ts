@@ -20,32 +20,31 @@ router.get(
 router.get(
   '/group-by-status',
   auth(UserRole.ADMIN),
-   projectController.getAllGroupProjectsByHealthStatus,
+  projectController.getAllGroupProjectsByHealthStatus,
 );
-
 
 router.get(
   '/:projectId',
-   auth(...ALL_USER_ROLES),
-   projectController.getProjectById
+  auth(...ALL_USER_ROLES),
+  projectController.getProjectById,
 );
 
 router.get(
   '/:projectId/employee-feedbacks',
-   auth(...ALL_USER_ROLES),
-   clientFeedbackController.getFeedbacksByProjectId
+  auth(...ALL_USER_ROLES),
+  clientFeedbackController.getFeedbacksByProjectId,
 );
 
 router.get(
   '/:projectId/employee-checkins',
-   auth(...ALL_USER_ROLES),
-   employeeCheckInController.getCheckInsByProjectId
+  auth(...ALL_USER_ROLES),
+  employeeCheckInController.getCheckInsByProjectId,
 );
 
 router.get(
   '/:projectId/activity-timelines',
-   auth(...ALL_USER_ROLES),
-   activityController.getActivitiesTimelineByProjectId,
+  auth(...ALL_USER_ROLES),
+  activityController.getActivitiesTimelineByProjectId,
 );
 
 const projectRouter = router;

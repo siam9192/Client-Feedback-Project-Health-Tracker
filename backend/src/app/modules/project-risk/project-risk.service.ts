@@ -3,6 +3,11 @@ import { calculatePagination } from '../../helpers/pagination.helper';
 import { objectId } from '../../helpers/utils.helper';
 import { PaginationOptions } from '../../types';
 import httpStatus from '../../utils/http-status';
+import {
+  ActivityPerformerRole,
+  ActivityType,
+} from '../activity/activity.interface';
+import activityService from '../activity/activity.service';
 import { AuthUser } from '../auth/auth.interface';
 import {
   CreateProjectRiskPayload,
@@ -38,7 +43,20 @@ class ProjectRiskService {
     };
 
     // Create risk
-    return await ProjectRiskModel.create(data);
+    const createdRisk = await ProjectRiskModel.create(data);
+
+    await activityService.createDirectActivity({
+      projectId: payload.projectId,
+      referenceId: createdRisk._id.toString(),
+      type: ActivityType.RISK,
+      content: `New ${createdRisk.severity} severity risk: "${createdRisk.title}"`,
+      metadata: {
+        severity: createdRisk.severity,
+        status: createdRisk.status,
+      },
+      performedBy: authUser.profileId,
+      performerRole: ActivityPerformerRole.CLIENT,
+    });
   }
 
   async getRisks(

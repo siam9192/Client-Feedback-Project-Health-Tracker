@@ -6,12 +6,12 @@ import { UserRole } from '../user/user.interface';
 export interface Activity extends Document {
   type: ActivityType;
   content: String;
-  data: Record<string, any>;
-  referenceId: Types.ObjectId;
+  metadata: Record<string, any>;
+  referenceId?: Types.ObjectId;
   project?: Types.ObjectId;
 
-  performerRole: UserRole;
-  performedBy: Types.ObjectId;
+  performerRole: ActivityPerformerRole;
+  performedBy?: Types.ObjectId;
 
   createdAt: Date;
   updatedAt: Date;
@@ -27,3 +27,10 @@ export enum ActivityType {
 export type CreateActivityPayload = z.infer<
   typeof projectValidations.createActivitySchema
 >;
+
+export enum ActivityPerformerRole {
+  ADMIN = UserRole.ADMIN,
+  EMPLOYEE = UserRole.EMPLOYEE,
+  CLIENT = UserRole.CLIENT,
+  SYSTEM = 'system',
+}

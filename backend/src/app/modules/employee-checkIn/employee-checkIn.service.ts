@@ -3,6 +3,11 @@ import { calculatePagination } from '../../helpers/pagination.helper';
 import { getCurrentWeek, objectId } from '../../helpers/utils.helper';
 import { PaginationOptions } from '../../types';
 import httpStatus from '../../utils/http-status';
+import {
+  ActivityPerformerRole,
+  ActivityType,
+} from '../activity/activity.interface';
+import activityService from '../activity/activity.service';
 import { AuthUser } from '../auth/auth.interface';
 import { ProjectStatus } from '../project/project.interface';
 import { ProjectModel } from '../project/project.model';
@@ -19,7 +24,7 @@ class EmployeeCheckInService {
     payload = employeeCheckInValidations.createCheckInSchema.parse(payload);
 
     //Fetch project
-    const project = await ProjectModel.findById(payload.project).select(
+    const project = await ProjectModel.findById(payload.projectId).select(
       '_id employees',
     );
 
@@ -30,13 +35,13 @@ class EmployeeCheckInService {
         httpStatus.FORBIDDEN,
         "You can't submit check in in this project ",
       );
-    const { weekNumber, year } = getCurrentWeek();
+    const { week, year } = getCurrentWeek();
 
     // Check this week  check in submission status
     const thisWeekCheckIn = await EmployeeCheckInModel.findOne({
       employee: objectId(authUser.profileId),
       project: project._id,
-      week: weekNumber,
+      week: week,
       year,
     });
 
@@ -46,10 +51,25 @@ class EmployeeCheckInService {
         'Checked in  submitted already for this week',
       );
 
-    return await EmployeeCheckInModel.create({
+    const createdCheckIn = await EmployeeCheckInModel.create({
       ...payload,
       employee: objectId(authUser.profileId),
     });
+
+    // Create activity
+    await activityService.createDirectActivity({
+      projectId: payload.projectId,
+      referenceId: createdCheckIn._id.toString(),
+      type: ActivityType.CHECKIN,
+      content: `Submitted weekly check-in with ${createdCheckIn.confidenceLevel}/5 confidence.`,
+      metadata: {
+        confidence: createdCheckIn.confidenceLevel,
+      },
+      performedBy: authUser.profileId,
+      performerRole: ActivityPerformerRole.EMPLOYEE,
+    });
+
+    return createdCheckIn;
   }
 
   async getPendingCheckIns(
@@ -58,7 +78,7 @@ class EmployeeCheckInService {
   ) {
     const { page, limit, skip, sortBy, sortOrder } =
       calculatePagination(paginationOptions);
-    const { weekNumber, year } = getCurrentWeek();
+    const { week, year } = getCurrentWeek();
     const employeeId = objectId(authUser.profileId);
 
     const result = await ProjectModel.aggregate([
@@ -82,7 +102,7 @@ class EmployeeCheckInService {
                   $and: [
                     { $eq: ['$project', '$$projectId'] },
                     { $eq: ['$employee', employeeId] },
-                    { $eq: ['$week', weekNumber] },
+                    { $eq: ['$week', week] },
                     { $eq: ['$year', year] },
                   ],
                 },

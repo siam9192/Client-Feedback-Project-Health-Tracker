@@ -1,6 +1,9 @@
 import { model, Schema } from 'mongoose';
-import { Activity, ActivityType } from './activity.interface';
-import { UserRole } from '../user/user.interface';
+import {
+  Activity,
+  ActivityType,
+  ActivityPerformerRole,
+} from './activity.interface';
 
 const ActivityModelSchema = new Schema<Activity>(
   {
@@ -15,11 +18,10 @@ const ActivityModelSchema = new Schema<Activity>(
       required: true,
     },
 
-    data: Schema.Types.Mixed,
+    metadata: Schema.Types.Mixed,
 
     referenceId: {
       type: Schema.Types.ObjectId,
-      required: true,
     },
     project: {
       type: Schema.Types.ObjectId,
@@ -29,12 +31,11 @@ const ActivityModelSchema = new Schema<Activity>(
     },
     performerRole: {
       type: String,
-      enum: Object.values(UserRole),
+      enum: Object.values(ActivityPerformerRole),
       required: true,
     },
     performedBy: {
       type: Schema.Types.ObjectId,
-      required: true,
     },
   },
   {

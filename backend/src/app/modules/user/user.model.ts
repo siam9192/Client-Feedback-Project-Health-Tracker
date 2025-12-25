@@ -77,11 +77,6 @@ const UserModelSchema = new Schema<User>(
 
 const EmployeeModelSchema = new Schema<Employee>(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      required: true,
-      unique: true,
-    },
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -129,16 +124,10 @@ const EmployeeModelSchema = new Schema<Employee>(
 
 const ClientModelSchema = new Schema<Client>(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      unique: true,
-      required: true,
-    },
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      select: false,
     },
     name: {
       type: String,
@@ -176,16 +165,10 @@ const ClientModelSchema = new Schema<Client>(
 
 const AdminModelSchema = new Schema<Admin>(
   {
-    userId: {
-      type: Schema.Types.ObjectId,
-      unique: true,
-      required: true,
-    },
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      select: false,
     },
     name: {
       type: String,

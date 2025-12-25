@@ -18,6 +18,7 @@ const ProjectModelSchema = new Schema<Project>(
       enum: Object.values(ProjectStatus),
       default: ProjectStatus.ON_TRACK,
     },
+    progressPercentage: { type: Number, min: 0, max: 100, default: 0 },
     healthScore: { type: Number, min: 0, max: 100, default: 100 },
 
     client: { type: Schema.Types.ObjectId, ref: 'Client' },

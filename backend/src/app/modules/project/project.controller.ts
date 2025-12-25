@@ -37,7 +37,7 @@ class ProjectController {
     });
   });
 
-   getProjectById = catchAsync(async (req, res) => {
+  getProjectById = catchAsync(async (req, res) => {
     const result = await projectService.getProjectById(
       req.user,
       req.params.projectId,
@@ -45,10 +45,9 @@ class ProjectController {
     sendSuccessResponse(res, {
       message: 'Assigned projects retrieved successfully',
       statusCode: httpStatus.OK,
-       data:result
+      data: result,
     });
   });
-
 }
 
 export default new ProjectController();

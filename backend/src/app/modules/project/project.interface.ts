@@ -9,6 +9,7 @@ export interface Project extends Document {
   startDate: Date;
   endDate: Date;
   status: ProjectStatus;
+  progressPercentage: number;
   healthScore: number;
 
   createdAt: Date;

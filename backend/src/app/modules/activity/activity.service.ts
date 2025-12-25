@@ -1,26 +1,35 @@
 import { UserRole } from '../user/user.interface';
 import { CreateActivityPayload } from './activity.interface';
 import projectValidations from './activity.validation';
-
 import { ActivityModel } from './activity.model';
 import { objectId } from '../../helpers/utils.helper';
 import { PaginationOptions } from '../../types';
 import { calculatePagination } from '../../helpers/pagination.helper';
 import { Types } from 'mongoose';
+import projectService from '../project/project.service';
 
 class ActivityService {
-  async createDirectActivity(payload: CreateActivityPayload) {
+  async createDirectActivity(
+    payload: CreateActivityPayload,
+    updateProjectHealthScore = true,
+  ) {
     //  Validate payload
     payload = projectValidations.createActivitySchema.parse(payload);
 
-    const { performerId, projectId, referenceId, ...others } = payload;
+    const { performedBy, projectId, referenceId, ...others } = payload;
+
     // Create activity
-    return await ActivityModel.create({
+    const createdActivity = await ActivityModel.create({
       ...others,
-      referenceId: objectId(referenceId),
-      performedBy: objectId(performerId),
+      ...(referenceId ? { project: objectId(referenceId) } : {}),
+      ...(performedBy ? { project: objectId(performedBy) } : {}),
       project: objectId(projectId),
     });
+
+    if (updateProjectHealthScore)
+      await projectService.updateProjectHealthScore(payload.projectId);
+
+    return createdActivity;
   }
 
   async getActivityTimelinesByProjectId(
@@ -66,15 +75,15 @@ class ActivityService {
             $switch: {
               branches: [
                 {
-                  case: { $eq: ['$performerRole', UserRole.ADMIN] },
+                  case: { $eq: ['$ActivityPerformerRole', UserRole.ADMIN] },
                   then: { $arrayElemAt: ['$adm', 0] },
                 },
                 {
-                  case: { $eq: ['$performerRole', UserRole.EMPLOYEE] },
+                  case: { $eq: ['$ActivityPerformerRole', UserRole.EMPLOYEE] },
                   then: { $arrayElemAt: ['$emp', 0] },
                 },
                 {
-                  case: { $eq: ['$performerRole', UserRole.CLIENT] },
+                  case: { $eq: ['$ActivityPerformerRole', UserRole.CLIENT] },
                   then: { $arrayElemAt: ['$cli', 0] },
                 },
               ],

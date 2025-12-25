@@ -1,8 +1,6 @@
 import { Types } from 'mongoose';
-
-import { ActivityType } from './activity.interface';
+import { ActivityType, ActivityPerformerRole } from './activity.interface';
 import z from 'zod';
-import { UserRole } from '../user/user.interface';
 
 export const createActivitySchema = z.object({
   type: z.nativeEnum(ActivityType, 'Invalid activity type'),
@@ -12,21 +10,27 @@ export const createActivitySchema = z.object({
     .min(1, 'Content cannot be empty')
     .max(500, 'Content is too long'),
 
-  data: z.record(z.string(), z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
 
-  referenceId: z.string().refine((val) => Types.ObjectId.isValid(val), {
-    message: 'Invalid Reference ID',
-  }),
+  referenceId: z
+    .string()
+    .refine((val) => Types.ObjectId.isValid(val), {
+      message: 'Invalid Reference ID',
+    })
+    .optional(),
 
   projectId: z.string().refine((val) => Types.ObjectId.isValid(val), {
     message: 'Invalid Project ID',
   }),
 
-  performerRole: z.nativeEnum(UserRole, 'Invalid user role'),
+  performerRole: z.nativeEnum(ActivityPerformerRole, 'Invalid user role'),
 
-  performerId: z.string().refine((val) => Types.ObjectId.isValid(val), {
-    message: 'Invalid Performer ID',
-  }),
+  performedBy: z
+    .string()
+    .refine((val) => Types.ObjectId.isValid(val), {
+      message: 'Invalid Performer ID',
+    })
+    .optional(),
 });
 
 const activityValidations = {

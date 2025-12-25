@@ -19,13 +19,13 @@ export const createFeedbackSchema = z.object({
     .max(500, 'Comment must be under 500 characters')
     .optional(),
 
-  issue: z
+  issueDescription: z
     .string()
     .trim()
     .nonempty('Issue length at least 1 character')
     .optional(),
 
-  project: z.string().refine((val) => Types.ObjectId.isValid(val), {
+  projectId: z.string().refine((val) => Types.ObjectId.isValid(val), {
     message: 'The provided Project ID is not a valid format',
   }),
 });

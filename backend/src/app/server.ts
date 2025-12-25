@@ -1,15 +1,14 @@
 import mongoose from 'mongoose';
 import app from './app';
 import envConfig from './config/env.config';
-import projectService from './modules/project/project.service';
-import { getCurrentWeek } from './helpers/utils.helper';
+import { initCrons } from './corn';
+
 
 async function main() {
   try {
     app.listen(5000, async () => {
       await mongoose.connect(envConfig.url.database as string);
-      console.log('Server in running on port', 5000);
-      await projectService.getAllGroupProjectsByHealthStatus();
+      initCrons()
     });
   } catch (error) {
     console.log(error);

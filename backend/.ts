@@ -85,7 +85,7 @@
 
 
 //   async getPendingCheckIns(authUser: AuthUser) {
-//   const { weekNumber, year } = getCurrentWeek();
+//   const { week, year } = getCurrentWeek();
 //   const employeeId = objectId(authUser.profileId);
 
 //   // 1️ Get active projects for employee
@@ -105,7 +105,7 @@
 //   const submittedCheckIns = await EmployeeCheckInModel.find({
 //     employee: employeeId,
 //     project: { $in: projectIds },
-//     week: weekNumber,
+//     week: week,
 //     year,
 //   })
 //     .select("project")
