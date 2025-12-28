@@ -14,6 +14,17 @@ class ProjectController {
       data: result,
     });
   });
+  getProjectById = catchAsync(async (req, res) => {
+    const result = await projectService.getProjectById(
+      req.user,
+      req.params.projectId,
+    );
+    sendSuccessResponse(res, {
+      message: 'Project retrieved successfully',
+      statusCode: httpStatus.OK,
+      data: result,
+    });
+  });
 
   getAssignedProjects = catchAsync(async (req, res) => {
     const result = await projectService.getAssignedProjects(
@@ -37,15 +48,25 @@ class ProjectController {
     });
   });
 
-  getProjectById = catchAsync(async (req, res) => {
-    const result = await projectService.getProjectById(
-      req.user,
-      req.params.projectId,
+  getRecentCheckinMissingProjects = catchAsync(async (req, res) => {
+    const result = await projectService.getRecentCheckinMissingProjects(
+      paginationOptionPicker(req.query),
     );
     sendSuccessResponse(res, {
-      message: 'Project retrieved successfully',
+      message: 'Recent checkin missing projects retrieved successfully',
       statusCode: httpStatus.OK,
-      data: result,
+      ...result,
+    });
+  });
+
+  getHighRiskProjectsWithSummary = catchAsync(async (req, res) => {
+    const result = await projectService.getHighRiskProjectsWithSummary(
+      paginationOptionPicker(req.query),
+    );
+    sendSuccessResponse(res, {
+      message: 'Recent checkin missing projects retrieved successfully',
+      statusCode: httpStatus.OK,
+      ...result,
     });
   });
 }

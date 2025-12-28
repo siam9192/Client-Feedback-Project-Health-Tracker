@@ -11,8 +11,11 @@ import { UserRole, UserStatus } from '../modules/user/user.interface';
 
 function auth(...roles: UserRole[]) {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    // const token = req.cookies?.accessToken?.replace('Bearer ', '');
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    console.log(req.cookies);
+    const token1 = req.cookies?.accessToken?.replace('Bearer ', '');
+    const token2 = req.headers.authorization?.replace('Bearer ', '');
+
+    const token = token1 || token2;
 
     // checking if the token is missing
     if (!token) {
@@ -26,13 +29,13 @@ function auth(...roles: UserRole[]) {
       decoded = jwtHelper.verifyToken(
         token,
         envConfig.jwt.access_token_secret as string,
-      ) as AuthUser & JwtPayload;
+      ) as AuthUser & JwtPayload & { id: string };
     } catch (error) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Unauthorized');
     }
 
     // checking if the user is exist
-    const user = await UserModel.findById(decoded.sub);
+    const user = await UserModel.findById(decoded.id);
 
     if (!user) {
       throw new AppError(httpStatus.NOT_FOUND, 'This user is not found !');

@@ -1,11 +1,12 @@
-import { UserRole } from '../user/user.interface';
-import { CreateActivityPayload } from './activity.interface';
+import {
+  ActivityPerformerRole,
+  CreateActivityPayload,
+} from './activity.interface';
 import projectValidations from './activity.validation';
 import { ActivityModel } from './activity.model';
 import { objectId } from '../../helpers/utils.helper';
 import { PaginationOptions } from '../../types';
 import { calculatePagination } from '../../helpers/pagination.helper';
-import { Types } from 'mongoose';
 import projectService from '../project/project.service';
 
 class ActivityService {
@@ -21,8 +22,8 @@ class ActivityService {
     // Create activity
     const createdActivity = await ActivityModel.create({
       ...others,
-      ...(referenceId ? { project: objectId(referenceId) } : {}),
-      ...(performedBy ? { project: objectId(performedBy) } : {}),
+      ...(referenceId ? { referenceId: objectId(referenceId) } : {}),
+      ...(performedBy ? { performedBy: objectId(performedBy) } : {}),
       project: objectId(projectId),
     });
 
@@ -40,7 +41,7 @@ class ActivityService {
 
     const result = await ActivityModel.aggregate([
       {
-        $match: { project: new Types.ObjectId(projectId) },
+        $match: { project: objectId(projectId) },
       },
       //  Lookups
       {
@@ -71,19 +72,25 @@ class ActivityService {
       // Add field
       {
         $addFields: {
-          performer: {
+          performedBy: {
             $switch: {
               branches: [
                 {
-                  case: { $eq: ['$ActivityPerformerRole', UserRole.ADMIN] },
+                  case: {
+                    $eq: ['$performerRole', ActivityPerformerRole.ADMIN],
+                  },
                   then: { $arrayElemAt: ['$adm', 0] },
                 },
                 {
-                  case: { $eq: ['$ActivityPerformerRole', UserRole.EMPLOYEE] },
+                  case: {
+                    $eq: ['$performerRole', ActivityPerformerRole.EMPLOYEE],
+                  },
                   then: { $arrayElemAt: ['$emp', 0] },
                 },
                 {
-                  case: { $eq: ['$ActivityPerformerRole', UserRole.CLIENT] },
+                  case: {
+                    $eq: ['$performerRole', ActivityPerformerRole.CLIENT],
+                  },
                   then: { $arrayElemAt: ['$cli', 0] },
                 },
               ],
@@ -102,17 +109,17 @@ class ActivityService {
           _id: 1,
           type: 1,
           content: 1,
-          data: 1,
+          metadata: 1,
           dateKey: 1,
           createdAt: 1,
-          performer: {
+          performedBy: {
             _id: 1,
             name: 1,
             profilePicture: 1,
           },
         },
       },
-
+      { $sort: { createdAt: 1 } },
       // Group by Date
       {
         $group: {

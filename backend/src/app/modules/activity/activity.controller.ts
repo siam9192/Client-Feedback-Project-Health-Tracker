@@ -7,7 +7,7 @@ import activityService from './activity.service';
 class ActivityController {
   getActivitiesTimelineByProjectId = catchAsync(async (req, res) => {
     const result = await activityService.getActivityTimelinesByProjectId(
-      req.params.id,
+      req.params.projectId,
       paginationOptionPicker(req.query),
     );
     sendSuccessResponse(res, {

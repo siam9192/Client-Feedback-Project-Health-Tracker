@@ -11,7 +11,11 @@ import {
 import projectValidations from './project.validation';
 
 import { ProjectModel } from './project.model';
-import { getRecentWeeks, objectId } from '../../helpers/utils.helper';
+import {
+  getRecentWeeks,
+  getWeeksBetweenDates,
+  objectId,
+} from '../../helpers/utils.helper';
 import { PaginationOptions } from '../../types';
 import { calculatePagination } from '../../helpers/pagination.helper';
 import { AuthUser } from '../auth/auth.interface';
@@ -46,7 +50,7 @@ class ProjectService {
       throw new AppError(httpStatus.NOT_FOUND, 'Client not found');
     }
 
-    if ((client.user as User)?.status === UserStatus.BLOCKED) {
+    if ((client.user as any as User)?.status === UserStatus.BLOCKED) {
       throw new AppError(
         httpStatus.FORBIDDEN,
         'Project assignment is not allowed for blocked clients',
@@ -74,7 +78,7 @@ class ProjectService {
     }
 
     for (const employee of employees) {
-      if ((employee.user as User)?.status === UserStatus.BLOCKED) {
+      if ((employee.user as any as User)?.status === UserStatus.BLOCKED) {
         throw new AppError(
           httpStatus.FORBIDDEN,
           `Project assignment not allowed for blocked employee: ${employee._id}`,
@@ -328,7 +332,7 @@ class ProjectService {
     const clientMap = new Map(clients.map((c) => [c._id.toString(), c]));
     const employeeMap = new Map(employees.map((e) => [e._id.toString(), e]));
 
-    // Populate client & employees efficiently
+    // Populate client & employees
     const result = groups.map((group) => {
       const projects = group.projects.map((project: Project) => ({
         ...project,
@@ -386,7 +390,119 @@ class ProjectService {
     // Return project as result
     return project;
   }
+  async getHighRiskProjectsWithSummary(paginationOptions: PaginationOptions) {
+    const { page, limit, skip } = calculatePagination(paginationOptions);
+    const highRiskThreshold = 60;
 
-  async getHighRiskProjects() {}
+    const whereConditions = {
+      status: { $ne: ProjectStatus.COMPLETED },
+      healthScore: { $lt: highRiskThreshold },
+    };
+
+    const projects = await ProjectModel.find(whereConditions)
+      .select(
+        '_id name client employees status progressPercentage healthScore endDate startDate',
+      )
+      .populate('client', '_id name profilePicture')
+      .sort({ healthScore: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const data = await Promise.all(
+      projects.map(async (project) => {
+        const weeks = getWeeksBetweenDates(
+          new Date(project.startDate),
+          new Date(),
+        );
+
+        const totalWeeksCount = Math.max(0, weeks.length - 1);
+
+        const expectedEmployeeCheckIns =
+          totalWeeksCount * project.employees.length;
+
+        const [
+          submittedEmployeeCheckins,
+          submittedClientFeedbacks,
+          openRisks,
+          flaggedIssues,
+        ] = await Promise.all([
+          EmployeeCheckInModel.countDocuments({ project: project._id }),
+          ClientFeedbackModel.countDocuments({ project: project._id }),
+          ProjectRiskModel.countDocuments({
+            project: project._id,
+            status: ProjectRiskStatus.OPEN,
+          }),
+          ClientFeedbackModel.countDocuments({
+            project: project._id,
+            isFlagged: true,
+          }),
+        ]);
+
+        return {
+          ...project,
+          summary: {
+            submittedEmployeeCheckins,
+            expectedEmployeeCheckIns,
+            missingEmployeeCheckins: Math.max(
+              0,
+              expectedEmployeeCheckIns - submittedEmployeeCheckins,
+            ),
+            submittedClientFeedbacks,
+            openRisks,
+            flaggedIssues,
+          },
+        };
+      }),
+    );
+
+    const totalResults = await ProjectModel.countDocuments(whereConditions);
+
+    return {
+      data,
+      meta: { page, limit, totalResults },
+    };
+  }
+
+  async getRecentCheckinMissingProjects(paginationOptions: PaginationOptions) {
+    const { page, limit, skip } = calculatePagination(paginationOptions);
+
+    const recentWeeks = getRecentWeeks(2);
+
+    //  const whereConditions = {
+    //   $or:recentWeeks.map(week=>({
+    //     $and:[
+    //       {
+    //         "lastCheckIn.week":{$ne:week.week},
+    //         "lastCheckIn.year":{$ne:week.year}
+    //       }
+    //     ]
+    //   }))
+    // }
+    const data = await ProjectModel.find()
+      .populate([
+        {
+          path: 'client',
+          select: '_id name profilePicture',
+        },
+        {
+          path: 'employees',
+          select: '_id name profilePicture',
+        },
+      ])
+      .skip(skip)
+      .limit(limit);
+
+    const totalResults = await ProjectModel.countDocuments();
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        totalResults,
+      },
+    };
+  }
 }
 export default new ProjectService();

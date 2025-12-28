@@ -34,7 +34,7 @@ class AuthService {
       throw new AppError(httpStatus.FORBIDDEN, 'Invalid email or password');
     }
 
-    const tokenPayload = { sub: user._id.toString() };
+    const tokenPayload = { id: user._id.toString() };
 
     // Generate access token
     const accessToken = jwtHelper.generateToken(

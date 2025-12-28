@@ -16,8 +16,7 @@ export interface User extends Document {
 }
 
 export interface Admin extends Document {
-  userId: Types.ObjectId;
-  user?: Types.ObjectId | User;
+  user: Types.ObjectId;
   name: string;
   gender?: Gender;
   profilePicture?: string;
@@ -26,8 +25,7 @@ export interface Admin extends Document {
 }
 
 export interface Employee extends Document {
-  userId: Types.ObjectId;
-  user?: Types.ObjectId | User;
+  user: Types.ObjectId;
   name: string;
   gender: Gender;
   profilePicture: string;
@@ -49,8 +47,7 @@ export interface Employee extends Document {
 }
 
 export interface Client extends Document {
-  userId: Types.ObjectId;
-  user?: Types.ObjectId | User;
+  user: Types.ObjectId;
   name: string;
   gender?: Gender;
   profilePicture?: string;

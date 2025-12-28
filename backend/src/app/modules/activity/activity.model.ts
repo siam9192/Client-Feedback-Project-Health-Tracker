@@ -36,6 +36,7 @@ const ActivityModelSchema = new Schema<Activity>(
     },
     performedBy: {
       type: Schema.Types.ObjectId,
+      default: null,
     },
   },
   {

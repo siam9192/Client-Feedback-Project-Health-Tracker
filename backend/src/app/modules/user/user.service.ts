@@ -34,7 +34,7 @@ class UserService {
         if (!client || !client.user)
           throw new Error('Client profile not found');
 
-        const { user, _id, userId, name, ...others } = client;
+        const { user, _id, ...others } = client;
 
         profile = {
           _id,
@@ -51,7 +51,7 @@ class UserService {
         if (!employee || !employee.user)
           throw new Error('Employee profile not found');
 
-        const { user, _id, userId, name, ...others } = employee;
+        const { user, _id, ...others } = employee;
 
         profile = {
           _id,
@@ -64,7 +64,7 @@ class UserService {
         const admin = await AdminModel.findById(profileId).lean();
         if (!admin || !admin.user) throw new Error('Admin profile not found');
 
-        const { user, _id, userId, name, ...others } = admin;
+        const { user, _id, ...others } = admin;
 
         profile = {
           _id,
@@ -97,7 +97,7 @@ class UserService {
         if (!client || !client.user)
           throw new Error('Client profile not found');
 
-        const { user, _id, userId, name, ...others } = client;
+        const { user, _id, name, ...others } = client;
 
         profile = {
           _id,
@@ -113,7 +113,7 @@ class UserService {
         if (!employee || !employee.user)
           throw new Error('Employee profile not found');
 
-        const { user, _id, userId, name, ...others } = employee;
+        const { user, _id, name, ...others } = employee;
 
         profile = {
           _id,
@@ -126,7 +126,7 @@ class UserService {
         const admin = await AdminModel.findById(profileId).lean();
         if (!admin || !admin.user) throw new Error('Admin profile not found');
 
-        const { user, _id, userId, name, ...others } = admin;
+        const { user, _id, name, ...others } = admin;
 
         profile = {
           _id,
@@ -149,11 +149,12 @@ class UserService {
     filterQuery: UsersFilterQuery,
     paginationOptions: PaginationOptions,
   ) {
+    console.log(filterQuery);
     const { searchTerm, notIn, select, ...others } = filterQuery;
     const { page, skip, limit, sortBy, sortOrder } =
       calculatePagination(paginationOptions);
 
-    // Build aggregation pipelines
+    //  aggregation pipelines
     const pipelines: any[] = [
       {
         $lookup: {

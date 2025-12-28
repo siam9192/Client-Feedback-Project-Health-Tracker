@@ -1,3 +1,4 @@
+import { startSession } from 'mongoose';
 import AppError from '../../errors/AppError';
 import { calculatePagination } from '../../helpers/pagination.helper';
 import { getCurrentWeek, objectId } from '../../helpers/utils.helper';
@@ -16,64 +17,99 @@ import { EmployeeCheckInModel } from './employee-checkIn.model';
 import employeeCheckInValidations from './employee-checkIn.validation';
 
 class EmployeeCheckInService {
-  async createCheckIn(
-    authUser: AuthUser,
-    payload: CreateEmployeeCheckInPayload,
-  ) {
-    // Validate payload
-    payload = employeeCheckInValidations.createCheckInSchema.parse(payload);
+ async createCheckIn(
+  authUser: AuthUser,
+  payload: CreateEmployeeCheckInPayload,
+) {
+  // Validate payload
+  payload = employeeCheckInValidations.createCheckInSchema.parse(payload);
 
-    //Fetch project
-    const project = await ProjectModel.findById(payload.projectId).select(
-      '_id employees',
+  const project = await ProjectModel.findById(payload.projectId).select(
+    '_id employees progressPercentage'
+  );
+
+  if (!project) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Project not found');
+  }
+
+  const employeeId = objectId(authUser.profileId);
+
+  if (!project.employees.includes(employeeId)) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      "You can't submit a check-in for this project"
+    );
+  }
+
+  const { week, year } = getCurrentWeek();
+
+  // Check if this week's check-in already exists
+  const existingCheckIn = await EmployeeCheckInModel.findOne({
+    employee: employeeId,
+    project: project._id,
+    week,
+    year,
+  });
+
+  if (existingCheckIn) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'You have already completed your weekly check-in'
+    );
+  }
+
+  const totalProgress = project.progressPercentage + payload.completePercentage;
+  if (totalProgress > 100) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Total progress cannot exceed 100%');
+  }
+
+  const session = await startSession();
+  session.startTransaction();
+
+  try {
+    // Create the check-in
+    const [createdCheckIn] = await EmployeeCheckInModel.create(
+      [
+        {
+          ...payload,
+          week,
+          year,
+          employee: employeeId,
+          project: project._id,
+        },
+      ],
+      { session }
     );
 
-    //Check project existence
-    if (!project) throw new AppError(httpStatus.NOT_FOUND, 'Project not found');
-    if (!project.employees.includes(objectId(authUser.profileId)))
-      throw new AppError(
-        httpStatus.FORBIDDEN,
-        "You can't submit check in in this project ",
-      );
-    const { week, year } = getCurrentWeek();
+    // Update project progress
+    project.progressPercentage = totalProgress;
+    await project.save({ session });
 
-    // Check this week  check in submission status
-    const thisWeekCheckIn = await EmployeeCheckInModel.findOne({
-      employee: objectId(authUser.profileId),
-      project: project._id,
-      week: week,
-      year,
-    });
+    // Commit transaction
+    await session.commitTransaction();
 
-    if (thisWeekCheckIn)
-      throw new AppError(
-        httpStatus.FORBIDDEN,
-        'You have already completed your weekly check-in',
-      );
-
-    const createdCheckIn = await EmployeeCheckInModel.create({
-      ...payload,
-      week,
-      year,
-      employee: objectId(authUser.profileId),
-      project:project._id
-    });
-
-    // Create activity
+    // Record activity 
     await activityService.createDirectActivity({
       projectId: payload.projectId,
       referenceId: createdCheckIn._id.toString(),
       type: ActivityType.CHECKIN,
       content: `Submitted weekly check-in with ${createdCheckIn.confidenceLevel}/5 confidence.`,
-      metadata: {
-        confidence: createdCheckIn.confidenceLevel,
-      },
+      metadata: { confidence: createdCheckIn.confidenceLevel },
       performedBy: authUser.profileId,
       performerRole: ActivityPerformerRole.EMPLOYEE,
     });
 
     return createdCheckIn;
+  } catch (error: any) {
+    await session.abortTransaction();
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      error.message || 'Failed to create check-in'
+    );
+  } finally {
+    await session.endSession();
   }
+}
 
   async getPendingCheckIns(
     authUser: AuthUser,
@@ -149,8 +185,9 @@ class EmployeeCheckInService {
                 name: 1,
                 status: 1,
                 healthScore: 1,
-                startAt: 1,
-                endAt: 1,
+                progressPercentage: 1,
+                startDate: 1,
+                endDate: 1,
               },
             },
           ],

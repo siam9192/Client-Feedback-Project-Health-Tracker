@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import z from 'zod';
-import clientCheckInValidations from './project-risk.validation';
+
 import projectRiskValidations from './project-risk.validation';
 
 export interface ProjectRisk extends Document {

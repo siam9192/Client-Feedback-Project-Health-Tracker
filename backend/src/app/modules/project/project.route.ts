@@ -18,9 +18,27 @@ router.get(
 );
 
 router.get(
+  '/health-groups',
+  auth(UserRole.ADMIN),
+  projectController.getAllGroupProjectsByHealthStatus,
+);
+
+router.get(
   '/health-group',
   auth(UserRole.ADMIN),
   projectController.getAllGroupProjectsByHealthStatus,
+);
+
+router.get(
+  '/missing-checkins',
+  auth(UserRole.ADMIN),
+  projectController.getRecentCheckinMissingProjects,
+);
+
+router.get(
+  '/high-risks',
+  auth(UserRole.ADMIN),
+  projectController.getHighRiskProjectsWithSummary,
 );
 
 router.get(

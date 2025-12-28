@@ -1,6 +1,8 @@
 import { model, Schema } from 'mongoose';
 import { Project, ProjectStatus } from './project.interface';
 
+const date = new Date();
+date.setDate(date.getDate() - 7);
 const ProjectModelSchema = new Schema<Project>(
   {
     name: {
@@ -31,6 +33,17 @@ const ProjectModelSchema = new Schema<Project>(
         (val: any[]) => val.length > 0,
         'At least one employee is required',
       ],
+    },
+    lastCheckIn: {
+      date: {
+        type: Date,
+      },
+      week: {
+        type: Number,
+      },
+      year: {
+        type: Number,
+      },
     },
   },
   { timestamps: true },

@@ -29,11 +29,11 @@ class ProjectRiskService {
     if (!project) throw new AppError(httpStatus.NOT_FOUND, 'Project not found');
 
     // Authorize
-     if (!project.employees.includes(objectId(authUser.profileId)))
-          throw new AppError(
-            httpStatus.FORBIDDEN,
-            "You can't submit chickin in this project ",
-        );
+    if (!project.employees.includes(objectId(authUser.profileId)))
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "You can't submit chickin in this project ",
+      );
 
     const { projectId, ...others } = payload;
 
@@ -59,7 +59,7 @@ class ProjectRiskService {
       performedBy: authUser.profileId,
       performerRole: ActivityPerformerRole.CLIENT,
     });
-    return createdRisk
+    return createdRisk;
   }
 
   async getRisks(

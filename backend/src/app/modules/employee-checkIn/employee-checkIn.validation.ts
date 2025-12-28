@@ -4,7 +4,6 @@ import { Types } from 'mongoose';
 const createCheckInSchema = z.object({
   progressSummary: z.string(),
 
-  message: z.string().optional(),
 
   blockers: z.string().optional(),
 
