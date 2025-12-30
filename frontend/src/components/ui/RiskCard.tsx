@@ -2,7 +2,7 @@ import { ProjectRisk } from "@/types/risk.type";
 import { formatEnumLabel, getRiskSeverityColor, getRiskStatusColor } from "@/utils/helpers";
 
 interface Props {
-  risk: ProjectRisk 
+  risk: ProjectRisk;
 }
 
 function RiskCard({ risk }: Props) {
@@ -26,14 +26,10 @@ function RiskCard({ risk }: Props) {
           <p className="mt-1 text-xs text-gray-500">
             Project: {risk.project.name} • Status: {formatEnumLabel(risk.project.status)}
           </p>
-          <p className="text-xs text-gray-500">
-            Health Score: {risk.project.healthScore ?? "N/A"}
-          </p>
+          <p className="text-xs text-gray-500">Health Score: {risk.project.healthScore ?? "N/A"}</p>
 
           {/* Owner info  */}
-          <p className="mt-1 text-xs text-gray-500">
-            Created By: {risk.employee.name}
-          </p>
+          <p className="mt-1 text-xs text-gray-500">Created By: {risk.employee.name}</p>
         </div>
 
         {/* Risk badges */}

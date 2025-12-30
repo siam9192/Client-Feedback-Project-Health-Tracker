@@ -50,7 +50,7 @@ export const clientRoutes = [
     icon: LayoutDashboard,
   },
   {
-    label: "My Projects",
+    label: "Assigned Projects",
     href: "/client/projects",
     icon: FolderKanban,
   },

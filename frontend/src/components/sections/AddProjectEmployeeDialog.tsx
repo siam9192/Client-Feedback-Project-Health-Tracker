@@ -23,7 +23,7 @@ export default function AddProjectEmployeeDialog({
 
   const params = {
     searchTerm,
-    limit: searchTerm ? 20 : 6,
+    limit: 20,
     notIn: selectedEmployees.map((e) => e._id).join(",") || "",
   };
 

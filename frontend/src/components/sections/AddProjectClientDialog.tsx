@@ -20,7 +20,7 @@ function AddProjectClientDialog({ selectedClientId, onClose }: AddProjectClientD
 
   const params = {
     searchTerm,
-    limit: searchTerm ? 20 : 6,
+    limit: 20,
     notIn: selectedClientId?._id ?? "",
   };
 

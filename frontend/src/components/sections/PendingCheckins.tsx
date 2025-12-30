@@ -22,7 +22,9 @@ export default function PendingCheckins() {
 
   const handelPageChange = (page: number) => {
     setPage(page);
-    refetch();
+    setTimeout(() => {
+      refetch();
+    });
   };
   return (
     <div className="bg-white shadow rounded-lg p-6 mt-10">

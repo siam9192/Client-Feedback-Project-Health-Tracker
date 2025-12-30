@@ -25,12 +25,14 @@ function Page() {
 
   const handelPageChange = (page: number) => {
     setPage(page);
-    refetch();
+    setTimeout(() => {
+      refetch();
+    });
   };
 
   return (
     <div>
-      <PageHeading title="Assigned Project" subtitle="Projects that assigned to you by admin" />
+      <PageHeading title="Assigned Projects" subtitle="Projects that assigned to you by admin" />
 
       {/* Project List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-[200px]">

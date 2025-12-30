@@ -31,7 +31,9 @@ function ProjectsMissingCheckIns() {
 
   const handelPageChange = (page: number) => {
     setPage(page);
-    refetch();
+    setTimeout(() => {
+      refetch();
+    });
   };
 
   return (

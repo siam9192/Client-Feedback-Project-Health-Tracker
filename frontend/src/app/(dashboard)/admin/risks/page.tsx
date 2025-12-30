@@ -10,17 +10,20 @@ import { useEffect, useState } from "react";
 import Pagination from "@/components/ui/Pagination";
 import { formatEnumLabel, getTotalPages } from "@/utils/helpers";
 
- const severities =   [{label:"All",value:""},...Object.values(ProjectRiskSeverity).map(_=>({
-    label:formatEnumLabel(_),
-    value:_
-  }))]
+const severities = [
+  { label: "All", value: "" },
+  ...Object.values(ProjectRiskSeverity).map((_) => ({
+    label: formatEnumLabel(_),
+    value: _,
+  })),
+];
 
 export default function ProjectRisksPage() {
   const [page, setPage] = useState(1);
-  const [severity,setSeverity] = useState("")
+  const [severity, setSeverity] = useState("");
 
   const { data, isLoading, refetch } = useQuery<IResponse<ProjectRisk[]>>("risks", () =>
-    getRisks({ page,severity }),
+    getRisks({ page, severity }),
   );
 
   const risks = data?.data ?? [];
@@ -30,11 +33,10 @@ export default function ProjectRisksPage() {
     setPage(newPage);
   };
 
-  useEffect(()=>{
-    if(!isLoading) refetch()
-  },[page,severity])
+  useEffect(() => {
+    if (!isLoading) refetch();
+  }, [page, severity]);
 
- 
   return (
     <div className="space-y-6">
       {/* Page Heading */}
@@ -42,16 +44,16 @@ export default function ProjectRisksPage() {
         <h1 className="text-2xl font-semibold text-gray-800">Project Risks</h1>
         <p className="text-sm text-gray-500">Track, assess, and mitigate project risks</p>
       </div>
-     <div className="mb-10 flex justify-end">
-  <div className="inline-flex rounded-xl bg-base-200 p-1 shadow-sm font-secondary">
-    {severities.map((sv) => {
-      const isActive = sv.value === severity;
+      <div className="mb-10 flex justify-end">
+        <div className="inline-flex rounded-xl bg-base-200 p-1 shadow-sm font-secondary">
+          {severities.map((sv) => {
+            const isActive = sv.value === severity;
 
-      return (
-        <button
-          key={sv.label}
-          onClick={() => setSeverity(sv.value)}
-          className={`
+            return (
+              <button
+                key={sv.label}
+                onClick={() => setSeverity(sv.value)}
+                className={`
             px-4 py-2 text-sm font-medium rounded-lg transition-all
             focus:outline-none focus-visible:ring-2 focus-visible:ring-primary
             ${
@@ -60,15 +62,14 @@ export default function ProjectRisksPage() {
                 : "text-base-content hover:bg-base-300"
             }
           `}
-        >
-          {sv.label}
-        </button>
-      );
-    })}
-  </div>
-</div>
+              >
+                {sv.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-      
       {/* Risks List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 min-h-[200px]">
         {isLoading ? (

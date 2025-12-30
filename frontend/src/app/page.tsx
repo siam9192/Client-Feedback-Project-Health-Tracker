@@ -2,7 +2,6 @@ import Container from "@/components/layout/Container";
 import { BarChart2, MessageCircle, Zap } from "lucide-react";
 
 export default function Home() {
-  
   return (
     <div className=" bg-white">
       <Container>

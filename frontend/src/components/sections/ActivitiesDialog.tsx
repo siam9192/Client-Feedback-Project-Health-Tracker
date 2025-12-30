@@ -24,10 +24,12 @@ function ActivitiesDialog({ id, onClose }: Props) {
   );
 
   const meta = data?.meta;
-
   useEffect(() => {
     if (data?.data) {
-      setTimelines((prev) => [...prev, ...data.data]);
+      setTimelines((prev) => {
+        const newItems = data.data.filter((item) => !prev.some((t) => t.date === item.date));
+        return [...prev, ...newItems];
+      });
     }
   }, [data]);
 

@@ -22,7 +22,9 @@ export default function HighRiskProjects() {
   const totalResults = meta?.totalResults ?? 0;
   const handelPageChange = (page: number) => {
     setPage(page);
-    refetch();
+    setTimeout(() => {
+      refetch();
+    });
   };
 
   return (

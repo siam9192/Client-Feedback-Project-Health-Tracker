@@ -51,7 +51,6 @@ export default function Sidebar() {
                 }
               `}
               >
-               
                 <span
                   className={`
                   h-5 w-1 rounded-full

@@ -11,7 +11,6 @@ import { LoginPayload } from "@/types/auth.type";
 import { login } from "@/services/api/auth.api.service";
 import { useRouter } from "next/navigation";
 
-
 type LoginFormValues = z.infer<typeof validators.loginSchema>;
 
 function page() {
@@ -23,20 +22,19 @@ function page() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(validators.loginSchema),
   });
-  const { mutate } = useMutation<null, LoginPayload>(login);;
+  const { mutate } = useMutation<null, LoginPayload>(login);
 
-  const router = useRouter()
+  const router = useRouter();
 
   const onSubmit = (data: LoginFormValues) => {
     mutate(data, {
       onSuccess: () => {
         toast.success("Login successful");
         reset();
-        router.replace("/")
+        router.replace("/");
       },
-      onError: (err) => {
-        
-        toast.error(err.message);
+      onError: () => {
+        toast.error("Wrong email or password");
       },
       invalidateKeys: ["current-user"],
     });
@@ -96,21 +94,6 @@ function page() {
             {isSubmitting ? "Logging in..." : "Login"}
           </button>
         </form>
-
-        {/* Separator */}
-        <div className="flex items-center my-6">
-          <span className="grow h-px bg-gray-300"></span>
-          <span className="mx-3 text-gray-400">or</span>
-          <span className="grow h-px bg-gray-300"></span>
-        </div>
-
-        {/* Signup Link */}
-        <p className="text-center text-sm text-gray-500 ">
-          Don't have an account?{" "}
-          <Link href="/register" className="text-indigo-600 font-medium hover:underline">
-            Register
-          </Link>
-        </p>
       </div>
     </div>
   );

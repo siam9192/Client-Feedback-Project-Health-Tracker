@@ -10,7 +10,7 @@ export interface ProjectRisk {
   status: ProjectRiskStatus;
   resolvedAt: string;
 
-  project: Pick<Project, "_id" | "name" | "healthScore"|"status">;
+  project: Pick<Project, "_id" | "name" | "healthScore" | "status">;
   employee: ProjectEmployee;
 
   createdAt: string;
