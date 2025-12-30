@@ -1,4 +1,4 @@
- ## Project Health Score Calculation Logic
+## Project Health Score Calculation Logic
 #  Project Management & Health Monitoring System
 
 ## Project Overview
@@ -237,19 +237,24 @@ Whenever the logic is triggered:
 ## Live Links & Demo Login
 
 ###  Demo Login Credentials
-###  Admin
-- **Email:** admin@example.com  
-- **Password:** Admin@123  
 
-###  Employee
-- **Email:** employee@example.com  
-- **Password:** Employee@123  
+#### 👑 Admin
+- **Email:** admin@gmail.com  
+- **Password:** adm123
 
-###  Client
-- **Email:** client@example.com  
-- **Password:** Client@123
-  
+#### 👨‍💼 Employees
+1. **Email:** arif.emp@gmail.com  
+   **Password:** emp123
+2. **Email:** gh.admin@example.com  
+   **Password:** emp123
+
+#### 🧑 Clients
+1. **Email:** zubair.m1@example.com  
+   **Password:** cli123
+2. **Email:** zubair.m2@example.com  
+   **Password:** cli123
 
 ### Live Applications
-- **Frontend:** [https://task-manager-client.up.railway.app](https://task-manager-client.up.railway.app)
-- **Backend:** [https://task-manager-server.up.railway.app](https://task-manager-server.up.railway.app)
+- **Frontend:** https://project-pulse.up.railway.app
+- **Backend:** https://project-pulse.up.railway-server.app
+
