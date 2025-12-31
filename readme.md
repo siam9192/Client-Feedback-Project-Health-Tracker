@@ -252,7 +252,7 @@ This acts as a **penalty pillar** starting from 100 points.
    **Password:** emp123
 
 #### 🧑 Clients
-1. **Email:** zubair.m1@example.com  
+1. **Email:** zubair.m@example.com  
    **Password:** cli123
 2. **Email:** gh.admin@example.com
    **Password:** cli123
